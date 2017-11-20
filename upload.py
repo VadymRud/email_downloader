@@ -37,8 +37,4 @@ def uploadmails(from_dir, hostname='other.hostname.com', port=587, email='other_
         print(attach_files)
         print(subject[0])
 
-# mailbox.uploadmails(dir='/home/user/dl_dir', )
-
-
-uploadmails(from_dir=main_dir, hostname='testudo.tmdcloud.com', user='vadym2@testing.testudo.tmd.cloud',
-            password='K0UgJaJa2nqM', email='vadym2@testing.testudo.tmd.cloud')
+#
