@@ -36,21 +36,21 @@ class EmailLib:
 
     def checksize(self):
         result, ids = self.server.search(None, 'ALL')
-        #print("New emails with your email in TO is %d" % len(ids[0].split()))
+        #print('New emails with your email in TO is %d' % len(ids[0].split()))
         size = 0
-        for id_ in ids[0].decode("utf-8").split():
+        for id_ in ids[0].decode('utf-8').split():
             x = self.server.fetch(id_, '(RFC822.SIZE)')
             size += int(x[1][0].split()[2].decode().split(')')[0])
         return humanfriendly.format_size(size)
 
 # ___ download mails   _________
 
-    def downloadmails(self, dir_="/home/user/dl_dir"):
+    def downloadmails(self, dir_='/home/user/dl_dir'):
         # ___ download mails   _________
         result, ids = self.server.search(None, 'ALL')
-        print("New emails with your email in TO is %d" % len(ids[0].split()))
+        print('New emails with your email in TO is %d' % len(ids[0].split()))
 
-        for id_ in ids[0].decode("utf-8").split():
+        for id_ in ids[0].decode('utf-8').split():
             x = self.server.fetch(id_, '(RFC822)')
             try:
                 email_p = email.message_from_bytes(x[1][0][1])
@@ -151,10 +151,10 @@ class EmailLib:
                       files=attach_files, server=host, username=user_to, password=password_to, istls=True, port=port_send)
             print(subject[0])
 
-    def transfermails(self, dir_="/home/user/dl_dir", hostname="other.hostname.com", ssl=True, port=993,
-                      email_to="other_email@other.hostname.com", password="some_other_password"):
+    def transfermails(self, dir_='/home/user/dl_dir', hostname='other.hostname.com', ssl=True, port_upload=993,
+                      port_send=587, email_to='other_email@other.hostname.com', password='some_other_password'):
         self.downloadmails(dir_=dir_)
-        self.uploadmails(from_dir=dir_, port_send=port, email_to=email_to, password_to=password, user_to=email_to,
+        self.uploadmails(from_dir=dir_, port_send=port_send, email_to=email_to, password_to=password, user_to=email_to,
                          host=hostname)
 
 
