@@ -1,15 +1,14 @@
 from imaplib import IMAP4, IMAP4_SSL
-import poplib
 import email
 import humanfriendly
 import os
 import time
 from email.header import decode_header
 import datetime
-from send_email import send_mail
+from .send_email import send_mail
 from os import listdir
 from os.path import isfile, join, isdir
-from send_email import send_mail
+
 
 
 class EmailLib:
@@ -42,8 +41,6 @@ class EmailLib:
             x = self.server.fetch(id_, '(RFC822.SIZE)')
             size += int(x[1][0].split()[2].decode().split(')')[0])
         return humanfriendly.format_size(size)
-
-# ___ download mails   _________
 
     def downloadmails(self, dir_='/home/user/dl_dir'):
         # ___ download mails   _________
@@ -87,6 +84,7 @@ class EmailLib:
             # save atach files
             if email_p.is_multipart():
                 atach_files = ''
+                content_id = ''
                 for part in email_p.walk():
 
                     # body = part.get_payload(decode=True).decode('utf-8', 'ignore')
@@ -96,6 +94,14 @@ class EmailLib:
                         fp.write(part.get_payload(decode=1))
                         fp.close
                         # save file attach
+                        if part.get('content-id'):
+                            content_id += '{file} 9=========9 {id}\n'.format(file=part.get_filename(),
+                                                                             id=part.get('content-id'))
+                            # clear file
+                            fp = open(os.path.join(dir_l, 'content_id'), 'w')
+                            fp.write('')
+                            fp.close
+
                         atach_files += '{file}\n'.format(file=part.get_filename())
                         fp = open(os.path.join(dir_l, 'attach'), 'w')
                         fp.write('')
@@ -111,14 +117,13 @@ class EmailLib:
                     fp = open(os.path.join(dir_l, 'attach'), 'a')
                     fp.write(atach_files)
                     fp.close
+                    if part.get('content-id'):
+                        fp = open(os.path.join(dir_l, 'content_id'), 'a')
+                        fp.write(content_id)
+                        fp.close
+
             else:
                 print('none_multi')
-                # body = email_p.get_payload()
-                # fp = open(os.path.join(dir_l, 'body'), 'w')
-                # fp.write(body)
-                # fp.close
-
-    # upload email
 
     def uploadmails(self, from_dir='/home/', port_send=587, email_to='other_email@other.hostname.com',
                     password_to='some_other_password', user_to='user', host='other.hostname.com'):
@@ -130,6 +135,7 @@ class EmailLib:
             files = [f for f in listdir(path) if isfile(join(path, f))]
             if 'subject' and 'body' and 'email_from' in files:
                 attach_files = []
+                content_ids = []
                 # open and read subject file
                 with open(join(path, 'subject'), 'r') as myfile:
                     subject = myfile.readlines()
@@ -147,8 +153,19 @@ class EmailLib:
                         attach_files.append(join(path, file_attach.replace('\n', '')))
                 else:
                     attach_files = []
-            send_mail(send_from=email_from[0], send_to=[email_to], subject=subject[0], text=body[0],
-                      files=attach_files, server=host, username=user_to, password=password_to, istls=True, port=port_send)
+                if isfile(join(path, 'content_id')):
+                    with open(join(path, 'content_id'), 'r') as myfile:
+                        content_ids = myfile.readlines()
+                else:
+                    content_ids = []
+
+                if len(body) <= 1:
+                    body = body[0]
+                else:
+                    body = ''.join(str(e) for e in body)
+            send_mail(send_from=email_from[0], send_to=[email_to], subject=subject[0], text=body,
+                      files_=attach_files, server=host, username=user_to, password=password_to, istls=True,
+                      port=port_send, content_id=content_ids)
             print(subject[0])
 
     def transfermails(self, dir_='/home/user/dl_dir', hostname='other.hostname.com', ssl=True, port_upload=993,
